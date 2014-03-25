@@ -1,0 +1,1852 @@
+HOST: https://54.246.19.32/horizon/0
+
+--- Coxito Web API ---
+---
+Welcome to the documentation for the Coxito Web API. All functionality and actions in the Coxito user interface can also be done using this API, since the Coxito
+user interface uses the Coxito Web API. Enjoy! And do not hesitate to contact us if you have any questions or comments :-) 
+<p>
+<b>
+Languages
+</b>
+<p>
+The following languages and language codes are used in some of the calls documented here:
+<li>
+English = 1
+</li>
+<li>
+Norwegian = 2
+</li>
+<li>
+Portuguese = 3
+</li>
+<li>
+Spanish = 4
+</li>
+---
+
+--
+Autocomplete 
+Shows autocomplete suggestions for user queries. 
+--
+<h5>
+Properties
+</h5>
+<li>
+userQuery (string): The text to get autocomplete suggestions for, this text is typically the text entered by end users in a search field
+</li>
+<li>
+maxSuggestions (int): The number of autocomplete suggestions you want returned
+</li>
+<p>
+GET /autocomplete{?userquery,maxsuggestions}
+> Content-Type: application/json
+< 200
+< Content-Type: application/json
+{ 
+    "$type":"Coxito.DomainModel.Search.AutoCompleteSuggestion, Coxito.DomainModel",
+    "UserQuery":"stei",
+    "Suggestions":["stein","stein.gran@coxito.com","steinar"] 
+} 
++++++
+< 400
+< Content-Type: application/json
+{"message":"Autocomplete userQuery is missing."}
++++++
+< 400
+< Content-Type: application/json
+{"message":"Autocomplete maxSuggestions must be a positive number."}
+
+
+--
+Add new users 
+Adds new user(s) to Coxito, and users accept the invitation.
+Note that the /addnewuser call can only be used by users with the Admin role.
+--
+
+<p>
+This method is used when an admin user invites other persons to join Coxito. When called, invite emails are sent out to the email addresses of the new users.
+<p>
+<h5>
+Properties
+</h5>
+<li>
+emailAddresses (list of string): email addresses to the new user(s) to add
+</li>
+<li>
+customerId (string): The unique identifier of the customer. The new users are added to this customer
+</li>
+<p>
+<li>
+adminUserId (string): The unique identifier of the admin user sending the invitation(s)
+</li>
+<p>
+POST /addnewuser
+> Content-Type: application/json
+{
+    "EmailAddresses":[
+        {
+            "Email":"stein@coxito.com",
+            "Name":"Stein Gran"
+        }
+    ],
+    "CustomerId":"6402f41d-9c23-43aa-a276-91313fe5c093",
+    "AdminUserId":"288571d5-57d4-43b3-970a-aa5cf8b22399"
+}
+< 200
+
+
+Accepts invitation to join a customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+inviteId (string): This invitation ID is sent to new user in an email, and the new user is asked to click on a link in the email which contains this invitation ID as a parameter. Forward that invitation ID into this API call
+</li>
+<li>
+password (string): The user is required to set a password
+</li>
+<li>
+customerDnsHostname (string): The DNS hostname which is used when the new user clicks on the link in the invitation email.
+</li>
+<p>
+POST /inviteresponse
+> Content-Type: application/json
+{
+    "InviteId":"d688fa1e-9fce-48fc-b933-152e770b728b",
+    "Password":"MyPasswordHere",
+    "CustomerDnsHostname":"customername.coxito.com"
+}
+< 204
+
+
+--
+Connection 
+The connection methods are used to retrieve an overview over all connections for a customer, and delete specific connections.
+--
+Get an overview of all stored connections for a specified customer. This call returns a list of connections, the example below has one connection in the list.
+<p>
+Properties
+</h5>
+<li>
+id (string): The unique identifier for the connection
+</li>
+<li>
+name (string): The displayname for the connection
+</li>
+<p>
+<li>
+type (string): The type of this connection. This is the name of the source system the connection points to, like Exchange, Dropbox, SuperOffice, etc. Note that the list of source systems is not constant, it grows as Coxito adds support for more source systems
+</li>
+<p>
+GET /connection{?customerId}
+< 200
+[
+    {
+        "$type":"Coxito.Horizon.Models.ConnectionDefinition, Coxito.Horizon",
+        "Id":"55119fbc-3ad8-4d0f-a7d5-f40890f9a75a",
+        "Name":"Exchange connection",
+        "Type":"Exchange"
+    }
+]
+
+
+Delete a connection.
+<p>
+Properties
+</h5>
+<li>
+customerId(string): The unique identifier for the customer
+</li>
+<li>
+connectionId(string): The unique identifier for the connection to delete
+</li>
+<p>
+DELETE /connection{?customerId,connectionId}
+< 204
+
+
+--
+Customer 
+The customer methods are CRUD methods for creating, retrieving, updating and deleting customers.
+--
+Retrieves customer settings for the specified customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+id (string): The unique identifier for the customer
+</li>
+<li>
+created (date): The date when the customer was created
+</li>
+<li>
+emailaddress/email (string): The email address of the customer 
+</li>
+<li>
+emailaddress/name (string): The name of the contact person at the customer
+</li>
+<li>
+locale (string): The locale setting for this customer
+</li>
+<li>
+name (string): The name of the contact person at the customer
+</li>
+<li>
+companyName (string): The name of customer company
+</li>
+<li>
+numberOfEmployees (int): The number of employees in the company
+</li>
+<li>
+dnsHostName (string): The DNS host name this customer uses
+</li>
+<li>
+phoneNumber (string): The phone number to the customer
+</li>
+<li>
+password (string): The password for this user (only * are returned)
+</li>
+GET /customer{?id}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.DomainModel.Customers.CustomerDefinition, Coxito.DomainModel",
+    "Id":"fc109a63-757d-4211-a45d-04159f9fd2a8",
+    "Created":"2013-01-10T14:27:43.1600075Z",
+    "EmailAddress":{
+        "$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel",
+        "Email":"frank@auxmeta.com",
+        "Name":""
+    },
+    "Locale":"Norwegian",
+    "Name":"Frank Gynnild",
+    "CompanyName":"AuxMeta AS",
+    "NumberOfEmployees":2,
+    "DnsHostName":"auxmeta.coxito.com",
+    "PhoneNumber":"+47 950 100 50",
+    "Password":"******"
+}
+
+Creates a new customer and updates an existing one
+<p>
+<h5>
+Properties
+</h5>
+<li>
+id(string): The unique identifier is all zeros for new customers
+</li>
+<li>
+created(string): The created date is 01/01/01 for new customers
+</li>
+<li>
+emailAddress/email(string): The email address of the contact person at the new customer
+</li>
+<li>
+emailAddress/name(string): The name of the person with the email address specified above
+</li>
+<li>
+locale(int): The language the customer wants to use. See the language overview at the top of this page for an explanation of the numbers
+</li>
+<li>
+name(string): The name of the contact person at the new customer 
+</li>
+<li>
+companyName(string): The name of the new customer
+</li>
+<li>
+numberOfEmployees(string): The number of employees at the new customer
+</li>
+<li>
+phoneNumber(string): The phone number to the new customer
+</li>
+<li>
+password(string): The password for the admin user for the new customer (optional)
+</li>
+<p>
+POST /customer
+> Content-Type: application/json
+{
+    "Id":"00000000-0000-0000-0000-000000000000",
+    "Created":"0001-01-01T00:00:00Z",
+    "EmailAddress":{
+        "Email":"frank@auxmeta.com",
+        "Name":""
+    },
+    "Locale":2,
+    "Name":"Frank Gynnild",
+    "CompanyName":"AuxMeta AS",
+    "NumberOfEmployees":2,
+    "DnsHostName":"auxmeta.coxito.com",
+    "PhoneNumber":"+47 950 100 50",
+    "Password":null}
+< 200
+
+
+Delete a customer
+<p>
+NOTE: This action cannot be undone!
+<p>
+<h5>
+Properties
+</h5>
+<li>
+id(string): The unique identifier for the customer to delete
+</li>
+DELETE /customer{?id}
+< 200
+
+
+--
+DNS
+Each customer has its own DNS alias, like customername.coxito.com. These method creates this DNS alias, and checks if a specified alias is already taken or not.
+--
+Create a DNS entry for a customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+dnsHostname(string): The DNS alias to create
+</li>
+<li>
+customerId(string): The unique identifier of the customer to create the DNS alias for
+</li>
+POST /dns
+> Content-Type: application/json
+{
+    "DnsHostName":"auxmeta.coxito.com",
+    "CustomerId":"0a0f7d1c-0c04-4059-a81f-b3c64bbdfbb8"}
+< 204
+
+
+Checks whether the specified DNS entry is available or not
+<p>
+<h5>
+Properties
+</h5>
+<li>
+dnsHostname(string): The DNS alias to check if is available or not
+</li>
+GET /dns{?dnsHostname}
+< 200
+true
+
+
+--
+Dropbox
+The Dropbox-specific methods are used when creating a new Dropbox connection, changing an existing one or retrieving the settings in an existing Dropbox connection. Use the /connection methods to get an overview of all connections and delete connections
+--
+Create a new Dropbox connection
+<p>
+Note that the connection ID of the new Dropbox connection is returned from this method.
+<p>
+<h5>
+Properties
+</h5>
+<li>
+token(string): The Dropbox token of the Dropbox account to connect to
+</li>
+<li>
+secretToken(string): The secret Dropbox token of the Dropbox account to connect to
+</li>
+<li>
+ownerEmailAddress(string): The email address of the owner of the Dropbox account
+</li>
+<li>
+id(string): The unique ID of the new Dropbox connection, must be all zeros for new Dropbox connections
+</li>
+<li>
+name(string): The name of the new Dropbox connection
+</li>
+<li>
+customerId(string): The unique customer ID of the customer which this new Dropbox connection belongs to
+</li>
+POST /dropbox
+> Content-Type: application/json
+{
+    "Token":"ASDKJFHGHTYDRODYOPASJKUASDFKJHSADLKJHLKJ",
+    "TokenSecret":"34587349587JHASGKDJKJHKJGKFG786567653HGVGFJHG7865876556CGFCGHFCGHFVKJN",
+    "OwnerEmailAddress":"stein@softwaredynamics.no",
+    "Id":"00000000-0000-0000-0000-000000000000",
+    "Name":"MY Dropbox account, and no-one elses ;-)",
+    "CustomerId":"45d97566-2a03-4c9d-a873-488ee6594517"
+}
+< 200
+"8af93be3-34ac-4632-8000-9591bc63b2a5"
+
+
+Retrieve the specified Dropbox connection settings
+<p>
+<h5>
+Properties
+</h5>
+<li>
+id(string): The Dropbox connection id of the connection to retrieve
+</li>
+<li>
+token(string): The Dropbox token of the Dropbox account to connect to
+</li>
+<li>
+secretToken(string): The secret Dropbox token of the Dropbox account to connect to
+</li>
+<li>
+ownerEmailAddress(string): The email address of the owner of the Dropbox account
+</li>
+<li>
+id(string): The unique ID of the new Dropbox connection
+</li>
+<li>
+name(string): The name of the Dropbox connection
+</li>
+<li>
+customerId(string): The unique customer ID of the customer which this new Dropbox connection belongs to
+</li>
+GET /dropbox{?id}
+< 200
+< Content-Type: application/json
+{
+    "$type":"AuxMeta.DomainModel.Connection.DropboxConnection, Coxito.DomainModel",
+    "Token":"ASDKJFHGHTYDRODYOPASJKUASDFKJHSADLKJHLKJ",
+    "TokenSecret":"34587349587JHASGKDJKJHKJGKFG786567653HGVGFJHG7865876556CGFCGHFCGHFVKJN",
+    "OwnerEmailAddress":"stein@softwaredynamics.no",
+    "Id":"8af93be3-34ac-4632-8000-9591bc63b2a5",
+    "Name":"MY Dropbox account, and no-one elses ;-)",
+    "CustomerId":"dbd84b12-d174-4e18-b546-5bec23d4a9b4"
+}
+
+
+--
+Email verification
+After a new customer has been created, an email is sent out to the specified email address, and the user is asked to click on a link to verify that he has actually asked for an account to be created in Coxito, and that he is the owner of the specified email address. The email contains a link, and the user is asked to click on it. When the user clicks on the link, the UI must forward the ID received from the end user to this method, and then the email address will be marked as verified.
+--
+Verifies an email address
+<p>
+<h5>
+Properties
+</h5>
+<li>
+id(string): A unique verification identifier
+</li>
+PUT /emailverification/{id}
+< 200
++++++
+< 400
+"Customer with id '798a9ed6-a4d3-4e34-9c7e-32bc41d49c27' does not exist."
+
+
+--
+Exchange
+The Exchange-specific methods are used when creating a new Exchange connection, changing an existing one or retrieving the settings in an existing Exchange connection. Use the /connection methods to get an overview of all connections and delete connections
+--
+Create a new Exchange connection
+<p>
+Note that the connection ID of the new Exchange connection is returned from this method.
+<p>
+<h5>
+Properties
+</h5>
+<li>
+customerLevelCredentials (boolean): Specifies whether the supplied credentials are to be used for all mailboxes, or if each user has to supply their own passwords
+</li>
+<li>
+indexuserEmailAddress (string): The email address of the Exchange index user
+</li>
+<li>
+indexuserPassword (string): The password of the Exchange index user
+</li>
+<li>
+userEmailAddresses (list of string): The email addresses of the mailboxes to index
+</li>
+<li>
+serializedUserEmailAddresses (string): This can be ignored
+</li>
+<li>
+id (string): The unique ID of the new Exchange connection, must be all zeros for new Exchange connections
+</li>
+<li>
+name (string): The name of the new Exchange connection
+</li>
+<li>
+customerId (string): The unique customer ID of the customer which this new Exchange connection belongs to
+</li>
+POST /exchange
+> Content-Type: application/json
+{
+    "CustomerLevelCredentials":true,
+    "IndexUserEmailAddress":"stein.gran@coxito.com",
+    "IndexUserPassword":"abc",
+    "UserEmailAddresses":[
+        "bjarne.hansen@abc.no"
+        ],
+    "SerializedUserEmailAddresses":"[\"bjarne.hansen@abc.no\"]",
+    "Id":"00000000-0000-0000-0000-000000000000",
+    "Name":"Exchange connection",
+    "CustomerId":"65eaea57-2fdb-4e55-b6d9-f3a0b4eb3d4f"
+}
+< 200
+"410c3542-a1b9-4545-a569-a130f956798d"
+
+
+Retrieve the specified Exchange connection settings
+<p>
+<h5>
+Properties
+</h5>
+<li>
+id (string): The Exchange connection ID of the connection to retrieve
+</li>
+<li>
+customerLevelCredentials (boolean): Specifies whether the supplied credentials are to be used for all mailboxes, or if each user has to supply their own passwords
+</li>
+<li>
+indexuserEmailAddress (string): The email address of the Exchange index user
+</li>
+<li>
+indexuserPassword (string): The password of the Exchange index user. Note: This always contains of the characters "*" when retrieved with this method
+</li>
+<li>
+userEmailAddresses (list of string): The email addresses of the mailboxes to index
+</li>
+<li>
+serializedUserEmailAddresses (string): The email addresses of the mailboxes to index
+</li>
+<li>
+id (string): The unique ID of the new Exchange connection, must be all zeros for new Exchange connections
+</li>
+<li>
+name (string): The name of the new Exchange connection
+</li>
+<li>
+customerId (string): The unique customer ID of the customer which this new Exchange connection belongs to
+</li>
+GET /exchange{?id}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.DomainModel.Connection.ExchangeConnection, Coxito.DomainModel",
+    "CustomerLevelCredentials":true,
+    "IndexUserEmailAddress":"stein.gran@coxito.com",
+    "IndexUserPassword":"***",
+    "SerializedUserEmailAddresses":"[\"bjarne.hansen@abc.no\"]",
+    "Id":"410c3542-a1b9-4545-a569-a130f956798d",
+    "Name":"Exchange connection",
+    "CustomerId":"65eaea57-2fdb-4e55-b6d9-f3a0b4eb3d4f"
+}
+
+
+--
+Invoices
+--
+Get list of invoices for a specified customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+customerId (string): The unique identifier for the customer whose invoices you want a list of
+</li>
+<li>
+invoices: A list of invoices
+</li>
+<li>
+invoiceId (string): The unique identifier for this invoice
+</li>
+<li>
+startPeriod (date): The start date for the time period the invoice covers
+</li>
+<li>
+endperiod (date): The end date for the time period the invoice covers
+</li>
+<li>
+features: List of the licensed features covered by the invoice
+</li>
+<li>
+features/name (string): The name of a feature
+</li>
+<li>
+customerName (string): The name of the customer who is the receiver of the invice
+</li>
+<li>
+customerId (string): The unique identifier of the customer
+</li>
+<li>
+numberOfLicenses (int): The number of licensed users which are covered by the invoice
+</li>
+<li>
+status (string): The status of an invoice is either Pending or Paid
+</li>
+<li>
+subscriptinLevel (int): The subscription level the customer has. 0 = Starter, 1 = Enterprise, 2 = Enterprise Plus
+</li>
+<li>
+emailreceivers: A list of email addresses of users who get new invoices sent to their email accounts
+</li>
+<li>
+accountOwner: This is the email address and name (optional) of the user who created the customer account
+</li>
+<li>
+ccReceivers: Email addresses and names (optional) for CC receivers of new invoices
+</li>
+GET /invoice{?customerId}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.Horizon.Models.InvoicesCreditCardAndEmailReceivers, Coxito.Horizon",
+    "Invoices":[
+        {
+            "$type":"Coxito.DomainModel.Subscription.Invoice, Coxito.DomainModel",
+            "InvoiceId":"fc89f4a3-e683-481e-8b27-6bf977d5025a",
+            "StartPeriod":"2013-02-03T00:00:00",
+            "EndPeriod":"2013-03-05T00:00:00",
+            "Details":{
+                "$type":"Coxito.DomainModel.Subscription.SubscriptionDetails, Coxito.DomainModel",
+                "Features":[
+                    {
+                        "$type":"Coxito.DomainModel.Subscription.SubscriptionFeature, Coxito.DomainModel",
+                        "Name":"Exchange mailbox"
+                        
+                    },
+                    {
+                        "$type":"Coxito.DomainModel.Subscription.SubscriptionFeature, Coxito.DomainModel",
+                        "Name":"Dropbox account"
+                        
+                    }
+                ],
+                "CustomerName":"Customer AS",
+                "CustomerId":"0b9c5f5f-9524-4ab3-9b2b-1b42a6e92deb",
+                "NumberOfLicenses":17
+            },
+            "Status":0,
+            "SubscriptionLevel":0
+        }
+        ],
+    "EmailReceivers":{
+        "$type":"Coxito.DomainModel.Subscription.InvoiceEmailReceivers, Coxito.DomainModel",
+        "AccountOwner":{
+            "$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel",
+            "Email":"bjarne@hansen.no",
+            "Name":""
+        },
+        "CcReceivers":[
+            {
+                "$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel",
+                "Email":"stein.gran@coxito.com",
+                "Name":"Stein J. Gran"
+            }
+            ]
+    },
+    "CreditCardStatus":0}
+
+
+Get a download link to a PDF version of the specified invoice
+<p>
+<h5>
+Properties
+</h5>
+<li>
+invoiceId (string): The unique identifier of the invoice you want to download
+</li>
+GET /invoice/download{?invoiceId}
+< 200
+"https://app.coxtio.com/dl?temporarytokenWhichIdentifiesAFileToDownload"
+
+
+Store updated email addresses of persons who will receive email notifications about new invoices
+<p>
+<h5>
+Properties
+</h5>
+<li>
+accountOwner: This is the email address and name (optional) of the user who created the customer account and is to be treated as the account owner
+</li>
+<li>
+ccReceivers: Email addresses and names (optional) for CC receivers of new invoices
+</li>
+<li>
+customerId (string): The unique customer identifier 
+</li>
+<p>
+POST /invoice
+> Content-Type: application/json
+{
+    "InvoiceEmailReceivers":{
+        "AccountOwner":{
+            "Email":"bjarne@ghansen.no",
+            "Name":""
+        },
+        "CcReceivers":[
+            {
+                "Email":"stein.gran@coxito.com",
+                "Name":"Stein J. Gran"
+            }
+            ]
+    },
+    "CustomerId":"abc"
+}
+< 204
+
+
+--
+Join company network
+A person can request access to a Coxito customer instance, and then be either approved or denied access by an admin. 
+<p>
+--
+Request to join a company network
+<p>
+<h5>
+Properties
+</h5>
+<li>
+emailAddress (string): The email address of the user who requests to join
+</li>
+<li>
+name (string): The name of the user who requests to join
+</li>
+<li>
+dnsHostName (string): The unique DNS hostname of the customer the user wants to join
+</li>
+<p>
+PUT /joinrequest{?emailAddress&name&dnsHostname}
+< 204
+
+
+After requesting access to a customer, an email is sent out to the specified email address (this is the result of the PUT request above). This email contains a link the users is asked to click on, and this link contains a unique invitation ID. This action is necessary to verify that the supplied email address is correct.
+<p>
+<h5>
+Properties
+</h5>
+<p>
+<li>
+inviteId (string): The unique invitation ID that is sent to the new user in an email
+</li>
+<li>
+password (string): The new user must supply a password for his/hers account at Coxito
+</li>
+<li>
+customerDnsHostname (string): The unique DNS hostname of the customer the user wants to join
+</li>
+<p>
+POST /joinrequest
+> Content-Type: application/json
+{
+    "InviteId":"9bdfbe53-02f6-4452-ac4c-4f82d82da54d",
+    "Password":"MyPasswordHere",
+    "CustomerDnsHostname":"customername.coxito.com"
+}
+< 204
+
+
+When the email address of a user who requests access to a customer has been verified, this new user must be approved by a customer admin (a user with the Admin role). This GET call retrieves a list of persons which have requested access to this Coxito customer 
+<p>
+<h5>
+Properties
+</h5>
+<p>
+<li>
+emailAddress (string): The email address of one of the users who requests access
+</li>
+<li>
+id (string): The unique user id of one of the users who requests access
+</li>
+<li>
+name (string): The name of one of the users who requests access
+</li>
+<li>
+role (string): The role of the new user. New users whoch are to be approved always have role "EndUser" (which is 1)
+</li>
+<p>
+GET /userapproval{?customerId}
+< 200
+< Content-Type: application/json
+[
+    {
+        "$type":"Coxito.DomainModel.Users.UserObject, Coxito.DomainModel",
+        "EmailAddress":"haakon.hansen@someone.com",
+        "Id":"31449ef5-23b4-4f69-aea2-5271de851021",
+        "Name":"Haakon Hansen",
+        "Role":1
+    },{
+        "$type":"Coxito.DomainModel.Users.UserObject, Coxito.DomainModel",
+        "EmailAddress":"bjarne.hanse@someone.com",
+        "Id":"543bfe76-0ed8-498d-bed6-445828a90b28",
+        "Name":"Bjarne Hansen",
+        "Role":1
+    }
+]
+
+
+A user with the Admin role can approve new users
+<p>
+<h5>
+Properties
+</h5>
+<p>
+<li>
+approvedUserIds (list of string): A list of  unique user IDs the admin would like to approve
+</li>
+<li>
+deniedUserIds (list of string): A list of  unique user IDs the admin would like to deny access
+</li>
+<li>
+customerId (string): The unique customer identifier
+</li>
+<li>
+adminUserId (string): The unique user ID for the admin user allowing and denying access
+</li>
+<p>
+POST /userapproval
+> Content-Type: application/json
+{
+    "ApprovedUserIds":[
+        "89393aa6-9abe-4e22-894f-fae45c466c4d",
+        "6e514803-bf28-49a4-84e8-8f23836257a4",
+        "62d3e8c7-ee67-4519-8860-7b65e7ca8f4c"
+    ],
+    "DeniedUserIds":[
+        "ec4b904c-564a-4f80-8678-697165e830b3"
+    ],
+    "CustomerId":"47edd39b-f48d-423c-bcb7-0267df0c822b",
+    "AdminUserId":"288571d5-57d4-43b3-970a-aa5cf8b22399"
+}
+< 204
+
+
+--
+Login
+To login into Coxito, use one of the following calls.
+<p>
+1. Social login. Use Google, Yahoo or similar social login systems, and get a verified email address from the end user. GET the user information for this user.
+<p>
+2. Local login. POST end-user credentials and get the user information for this user.
+<p>
+<p>
+When logging in to Coxito, the license status of the customer the user belongs to is also returned.
+<p>
+Possible license status codes are:
+<p>
+<li>
+Trial = 1
+</li>
+<li>
+Subscription = 2
+</li>
+<li>
+Trial Expired = 3
+</li>
+<li>
+Subscription not paid = 4
+</li>
+<li>
+Subscription is cancelled = 5
+</li>
+--
+Log in to Coxito with an email address from a social login system
+<p>
+<h5>
+Properties
+</h5>
+<li>
+userEmailaddress (string): The email address of the end user, verified by a social media login system
+</li>
+<li>
+customerDnsHostname (string): The DNS hostname used to access the Coxito web application
+</li>
+<li>
+emailAddress (string): The emails address of the user
+</li>
+<li>
+id (string): The unique identifier for the user
+</li>
+<li>
+name (string): The name of the user
+</li>
+<li>
+role (int): The role of this user. 1 = End user, 2 = Admin
+</li>
+<li>
+licenseStatus (int): The license status of the customer this user belongs to. This can be used to take certain actions based on the license status when a user from this customer logs in to Coxito. See overview of license status codes above.
+GET /login{?userEmailaddress&customerDnsHostname}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.DomainModel.Users.UserInformation, Coxito.DomainModel",
+    "User":{
+        "$type":"Coxito.DomainModel.Users.UserObject, Coxito.DomainModel",
+        "EmailAddress":"bjarne.hansen@coxito.com",
+        "Id":"288571d5-57d4-43b3-970a-aa5cf8b22399",
+        "Name":"Bjarne Hansen",
+        "Role":1
+    },
+    "LicenseStatus":2,
+    "CustomerId":"9b480edf-8b18-462a-b092-c7c16489deb6"
+}
+
+
+Log in to Coxito using a local login 
+<p>
+<h5>
+Properties
+</h5>
+<li>
+username (string): This is the email address of the end user
+</li>
+<li>
+password (string): The password supplied by the end user
+</li>
+<li>
+customerId (string): The customer ID of the customer the user attempts to log in to
+</li>
+<li>
+emailAddress (string): The emails address of the user
+</li>
+<li>
+id (string): The unique identifier for the user
+</li>
+<li>
+name (string): The name of the user
+</li>
+<li>
+role (int): The role of this user. 1 = End user, 2 = Admin
+</li>
+<li>
+licenseStatus (int): The license status of the customer this user belongs to. This can be used to take certain actions based on the license status when a user from this customer logs in to Coxito. See overview of license status codes above.
+POST /login
+> Content-Type: application/json
+{
+    "Username":"bjarne.hansen@coxito.com",
+    "Password":"S0mePassw0rd",
+    "CustomerDnsName":"Coxito.coxito.com"
+}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.DomainModel.Users.UserInformation, Coxito.DomainModel",
+    "User":{
+        "$type":"Coxito.DomainModel.Users.UserObject, Coxito.DomainModel",
+        "EmailAddress":"bjarne.hansen@coxito.com",
+        "Id":"288571d5-57d4-43b3-970a-aa5cf8b22399",
+        "Name":"Bjarne Hansen",
+        "Role":1
+    },
+    "LicenseStatus":2,
+    "CustomerId":"f8d7ecf7-bfe2-473a-9d09-b994ea48a424"
+}
+
+
+--
+Login Provider
+A Login Provider is a login system which end users can use to log on to Coxito. Customers can themselves administer which login systems to use, and by using these calls you can get a list of all possible login providers, and set and get the login providers to use for a customer
+--
+Get all login providers which are offered by Coxito
+<p>
+<h5>
+Properties
+</h5>
+<li>
+displayName (string): The display name of a login provider
+</li>
+<li>
+id (string): The unique ID for a login provider
+</li>
+GET /loginprovider
+< 200
+< Content-Type: application/json
+[{
+    "$type":"Coxito.DomainModel.Authentication.LoginProvider, Coxito.DomainModel",
+    "DisplayName":"Google",
+    "Id":"google"
+},
+{
+    "$type":"Coxito.DomainModel.Authentication.LoginProvider, Coxito.DomainModel",
+    "DisplayName":"Yahoo",
+    "Id":"yahoo"
+},
+{
+    "$type":"Coxito.DomainModel.Authentication.LoginProvider, Coxito.DomainModel",
+    "DisplayName":"Facebook",
+    "Id":"facebook"
+}]
+
+
+Get enabled login providers for the specified customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+customerId (string): The unique identifier for the customer to get login providers for
+</li>
+<li>
+displayName (string): The display name of a login provider
+</li>
+<li>
+id (string): The unique ID for a login provider
+</li>
+GET /loginprovider{?customerId}
+< 200
+> Content-Type: application/json
+[{
+    "$type":"Coxito.DomainModel.Authentication.LoginProvider, Coxito.DomainModel",
+    "DisplayName":"Google",
+    "Id":"google"
+},
+{
+    "$type":"Coxito.DomainModel.Authentication.LoginProvider, Coxito.DomainModel",
+    "DisplayName":"Microsoft",
+    "Id":"microsoft"
+}]
+
+
+Set which login providers to use for the specified customer. Call /loginprovider to get a master lost of all login providers supported by Coxito, what is saved here is a subset of that master list
+<p>
+<h5>
+Properties
+</h5>
+<li>
+customerId (string): The unique identifier for the customer to set login providers for
+</li>
+<li>
+displayName (string): The display name of a login provider
+</li>
+<li>
+id (string): The unique ID for a login provider
+</li>
+POST /loginprovider
+{
+    "CustomerId":"61631678-4583-4c3f-8260-694b6573e619",
+    "LoginProviders":[
+        {
+            "DisplayName":"Google",
+            "Id":"google"
+        },
+        {
+            "DisplayName":"Microsoft",
+            "Id":"microsoft"
+        }
+    ]
+}
+< 204
+
+
+--
+Notifications
+Notifications are messages to a user which informs about an event the user should know about or an event where the user is asked to take action. 
+<p>
+Example: The Exchange password for a user has expired, and the user is required to update the stored password in order to ensure Coxito can make new emails in this Exchange mailbox searchable.
+<p>
+The following message types are returned:
+<p>
+<li>
+Information = 1
+</li>
+<li>
+Warning = 2
+</li>
+<li>
+Error = 3
+</li>
+--
+Gets notifications (if any) for the specified user
+<p>
+<h5>
+Properties
+</h5>
+<li>
+noticeId (string): The unique identifier for a notification messages
+</li>
+<li>
+eventId (string): The unique identifier for the event which triggered this notifications
+</li>
+<li>
+text (string): The text to show to the user when displaying this notification
+</li>
+<li>
+messageType (int): The message type of the nitification. See above for an overview of the various message types
+</li>
+<li>
+language (int): The language of the text in the notification.  See the language overview at the top of this page for an explanation of the numbers
+</li>
+GET /notifications{?userId}
+< 200
+< Content-Type: application/json
+[{
+    "$type":"Coxito.DomainModel.Notification.Notice, Coxito.DomainModel",
+    "NoticeId":"fbc22569-1c9f-4179-a84e-7793161ecaf3",
+    "EventId":"1337feec-eb10-404d-8233-2cf7ad273823",
+    "Text":"All informasjon fra din Exchange mailbox er nå indeksert",
+    "MessageType":1,
+    "Language":2
+},
+{
+    "$type":"Coxito.DomainModel.Notification.Notice, Coxito.DomainModel",
+    "NoticeId":"2de68b85-bab7-49d9-bcdb-a77672feccbe",
+    "EventId":"466a8edb-a73a-43fb-8210-9595d63ee1d2",
+    "Text":"Your Exchange password has expired, please update your stored password",
+    "MessageType":3,
+    "Language":1
+}]
+
+
+--
+OAuth v1 
+The OAuth v1 calls are used when configuring connections for data sources which uses OAuth v1. 
+<p>
+<b>
+Note: 
+</b>
+It is not necessary to use these calls when working with data sources which uses OAuth v2.
+<p>
+--
+Gets an authorization request
+<p>
+<h5>
+Properties
+</h5>
+<li>
+culture (string): The culture to use
+</li>
+<li>
+redirectTo (string): URI to redirect to
+</li>
+<li>
+tokenType (string): The type of the token which is returned
+</li>
+<li>
+token (string): The OAuth V1 token to use
+</li>
+<li>
+tokenSecret (string): The OAuth v1 secret token to use
+</li>
+<li>
+authorizationUri (string): The authorization URI to use
+</li>
+GET /oauthv1{?culture,redirectTo}
+< 200
+< Content-Type: application/json
+{
+    "$type":"AuxMeta.Connector.Contracts.OAuthV1AuthorizationRequest, AuxMeta.Connector.Contracts",
+    "RequestToken":{
+        "$type":"AuxMeta.Connector.Contracts.Authorization.OAuthV1Token, AuxMeta.Connector.Contracts",
+        "TokenType":"Request",
+        "Token":"y4x6iynnr3ey040",
+        "TokenSecret":"98jnoqps906ewwu"
+    },
+    "AuthorizationUri":"https://api.dropbox.com/1/oauth/authorize?oauth_token=y4x6iynnr3ey040&locale=nb&oauth_callback=http://localhost/sky/DropBox"
+}
+
+
+Verifies an authorization request
+<p>
+<h5>
+Properties
+</h5>
+<li>
+tokenType (int): The type of the token to use
+</li>
+<li>
+token (string): The OAuth V1 token to use
+</li>
+<li>
+tokenSecret (string): The OAuth v1 secret token to use
+</li>
+<li>
+authorizationUri (string): The authorization URI to use
+</li>
+POST /oauthv1
+> Content-Type: application/json
+{
+    "RequestToken":{
+        "TokenType":0,
+        "Token":"y4x6iynnr3ey040",
+        "TokenSecret":"98jnoqps906ewwu"},
+        "AuthorizationUri":"https://api.dropbox.com/1/oauth/authorize?oauth_token=y4x6iynnr3ey040&locale=nb&oauth_callback=http://localhost/sky/DropBox"
+}
+< 200
+
+
+--
+Portlets
+Portlets are information analysis viewers, and these calls provides ways to manage the porlets for a user. 
+<p>
+<hr>
+The portlet types are (Note: There will be more portlets, so this list is dynamic):
+<li>
+Last contacts = 1
+</li>
+<li>
+Last messages = 2
+</li>
+<li>
+Last sales = 3
+</li>
+<li>
+Last docuemnts = 4
+</li>
+<li>
+Most communicated with = 5
+</li>
+<li>
+Sales pipeline = 6
+</li>
+--
+Gets all available portlets for a specific customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+header (string): The header of the portlet
+</li>
+<li>
+content (string): The content of the portlet
+</li>
+<li>
+column (int): Together with the row property, this determines the x-y position of the portlet. 
+</li>
+<li>
+row (int): Together with the column property, this determines the x-y position of the portlet. 
+</li>
+<li>
+id (int): the unique ID for this portlet
+</li>
+<li>
+porletType (int): The portlet type. The portlet types are defined below.
+</li>
+GET /portlets{?customerId}
+< 200
+< Content-Type: application/json
+[
+{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Messages",
+    "Content":"Lorem ipsum",
+    "Column":1,
+    "Row":1,
+    "Id":500,
+    "PortletType":2
+},
+{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Support tickets",
+    "Content":"Lorem ipsum",
+    "Column":2,
+    "Row":1,
+    "Id":600,
+    "PortletType":3
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Last Contacts",
+    "Content":"lorem ipsum",
+    "Column":3,
+    "Row":2,
+    "Id":700,
+    "PortletType":1
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Documents",
+    "Content":"lorem ipsum",
+    "Column":1,
+    "Row":2,
+    "Id":800,
+    "PortletType":4
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Meetings",
+    "Content":"lorem ipsum",
+    "Column":2,
+    "Row":3,
+    "Id":900,
+    "PortletType":3
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Recommended content",
+    "Content":"lorem ipsum",
+    "Column":2,
+    "Row":6,
+    "Id":1000,
+    "PortletType":3
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Pictures",
+    "Content":"lorem ipsum",
+    "Column":2,
+    "Row":2,
+    "Id":1100,
+    "PortletType":3
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"RSS-feeds",
+    "Content":"lorem ipsum",
+    "Column":2,
+    "Row":5,
+    "Id":1200,
+    "PortletType":3
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Communicated most with",
+    "Content":"lorem ipsum",
+    "Column":2,
+    "Row":4,
+    "Id":1200,
+    "PortletType":5
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Sales Pipeline",
+    "Content":"lorem ipsum",
+    "Column":3,
+    "Row":1,
+    "Id":1300,
+    "PortletType":6
+}]
+
+
+Gets the portlets for a specific user
+<p>
+<h5>
+Properties
+</h5>
+<li>
+header (string): The header of the portlet
+</li>
+<li>
+content (string): The content of the portlet
+</li>
+<li>
+column (int): Together with the row property, this determines the x-y position of the portlet. 
+</li>
+<li>
+row (int): Together with the column property, this determines the x-y position of the portlet. 
+</li>
+<li>
+id (int): the unique ID for this portlet
+</li>
+<li>
+porletType (int): The portlet type. The portlet types are defined below.
+</li>
+GET /portlets{?userId}
+< 200
+< Content-Type: application/json
+[
+{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Sales Pipeline",
+    "Content":"lorem ipsum",
+    "Column":3,
+    "Row":1,
+    "Id":1300,
+    "PortletType":6
+},{
+    "$type":"Coxito.DomainModel.Portlets.Portlet, Coxito.DomainModel",
+    "Header":"Last Contacts",
+    "Content":"lorem ipsum",
+    "Column":3,
+    "Row":2,
+    "Id":700,
+    "PortletType":1
+}
+]
+
+
+Sets the portlets for a specific user
+<p>
+<h5>
+Properties
+</h5>
+<li>
+userId (string): The unique identifier of the user to save the porlets for
+</li>
+<li>
+header (string): The header of the portlet
+</li>
+<li>
+content (string): The content of the portlet
+</li>
+<li>
+column (int): Together with the row property, this determines the x-y position of the portlet. 
+</li>
+<li>
+row (int): Together with the column property, this determines the x-y position of the portlet. 
+</li>
+<li>
+id (int): the unique ID for this portlet
+</li>
+<li>
+porletType (int): The portlet type. The portlet types are defined below.
+</li>
+POST /portlets
+> Content-Type: application/json
+{
+    "UserId":"f00151d9-46dc-40d1-afc9-1ae12e034aef",
+    "Portlets":[
+        {
+            "Header":"Sales Pipeline",
+            "Content":"lorem ipsum",
+            "Column":3,
+            "Row":1,
+            "Id":1300,
+            "PortletType":6
+        },{
+            "Header":"Last Contacts",
+            "Content":"lorem ipsum",
+            "Column":3,
+            "Row":2,
+            "Id":700,
+            "PortletType":1
+        }
+    ]
+}
+< 204
+
+
+--
+Sales Pipeline 
+A sales pipeline is a visual interpretation of the current status of a sales process. A company normally have several customers, and the sales pipeline shows the accumulated contract values for each phase in the sales process.
+--
+Get the data to build up a sales pipeline
+<p>
+<h5>
+Properties
+</h5>
+<li>
+phase (string): The unique identifier of the user to save the porlets for
+</li>
+<li>
+contractValue (string): The header of the portlet
+</li>
+<li>
+probability (double): The probability that sales in this pahse will succeed
+</li>
+<li>
+count (int): The number of (potential) sales in this phase
+</li>
+<li>
+rank (int): The order of the sales pipeline. A phase with a low rank is earlier in the sales pipeline that a phase with a higher rank
+</li>
+GET /salespipeline
+< 200
+< Content-Type: application/json
+[
+{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Avklaring beslutningstaker",
+    "ContractValue":143421850.0,
+    "Probability":30.0,
+    "Count":41,
+    "Rank":4
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Sluttforhandlinger",
+    "ContractValue":0.0,
+    "Probability":80.0,
+    "Count":0,
+    "Rank":8
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Muntlig aksept",
+    "ContractValue":2700000.0,
+    "Probability":90.0,
+    "Count":1,
+    "Rank":9
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Andre møte",
+    "ContractValue":0.0,
+    "Probability":0.0,
+    "Count":2,
+    "Rank":3
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Solgt (men ikke fakturert)",
+    "ContractValue":134623650.0,
+    "Probability":100.0,
+    "Count":131,
+    "Rank":10
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Tilbud og plan",
+    "ContractValue":135941850.0,
+    "Probability":50.0,
+    "Count":15,
+    "Rank":5
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Første møte.",
+    "ContractValue":0.0,
+    "Probability":0.0,
+    "Count":2,
+    "Rank":2
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Tapt",
+    "ContractValue":0.0,
+    "Probability":0.0,
+    "Count":0,
+    "Rank":13
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"Enig om prosjektplan",
+    "ContractValue":0.0,
+    "Probability":70.0,
+    "Count":0,
+    "Rank":7
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"KONTRAKTSVERDI (kan fakt. i flere delfaktura)",
+    "ContractValue":24000000.0,
+    "Probability":100.0,
+    "Count":3,
+    "Rank":11
+},{
+    "$type":"AuxMeta.DomainModel.Analysis.SalesPipelineItem, Coxito.DomainModel",
+    "Phase":"TILLEGGSORDRE",
+    "ContractValue":13900000.0,
+    "Probability":100.0,
+    "Count":1,
+    "Rank":12
+}
+]
+
+
+--
+Search
+--
+Search for a query text
+<p>
+<h5>
+Properties
+</h5>
+<li>
+searchPage (int): Used for paging search results. Use searchPage=0 to get the search results on the first page, searchPage=1 for the second page and so on
+</li>
+<li>
+searchHitsPrPage (int): The number of search hits that is returned
+</li>
+<li>
+userQuery (string): The search text entered by the end user, this is the text the user is searching for
+</li>
+<li>
+documentTypes (string): If set, only return search results that are within these specified document types. This property is used for filtering
+</li>
+<li>
+connectors (string): If set, only returns search results that are from the specified connectors. Example: Search only in contacts: "DocumentTypes":["AuxMeta.DomainModel.Document.Contact"]
+</li>
+<li>
+folders (string): If set, only returns search hits that are located in the specified folders
+</li>
+<li>
+conversations (string): If set, only returns search hits that are in one of the specified conversations
+</li>
+<li>
+sort (string): The sort order of the search hits. Possible values are "date" and "relevance"
+</li>
+<li>
+noSearchMetadata (boolean): Set to true if facets and highlighted summary is to be returned together with the search results, false otherwise
+</li>
+<li>
+fromDate (string): The search results must be newer that this date. Set to "0001-01-01T00:00:00Z" if no from date is to be used
+</li>
+<li>
+toDate (string): The search results must be older than this date. Set to "0001-01-01T00:00:00Z" if no to date is to be used
+</li>
+<li>
+language (string): Set the language to use when searching (optional)
+</li>
+<li>
+misspelled (boolean): True if Coxito detected taht the user query was a misspelled word. In this case, user queries where the misspellings have been corrected are available in the AlternativeUserQueries property. False if the user query is correctly spelled
+</li>
+<li>
+alternativeUserQueries (list of string): Contains alternative user queries if the Misspelled property is true
+</li>
+<li>
+alternateLanguage (boolean):True if Coxito suggests running this query with a different language
+</li>
+<li>
+alternateLanguageQueries (string): Contains alternative languages to execute this query in if the AlternateLanguage property is true.
+</li>
+POST /search
+> Content-Type: application/json
+{
+    "SearchPage":0,
+    "SearchHitsPrPage":0,
+    "UserQuery":"lorem",
+    "DocumentTypes":null,
+    "Connectors":null,
+    "Folders":null,
+    "Conversations":null,
+    "Sort":null,
+    "NoSearchMetadata":false,
+    "FromDate":"0001-01-01T00:00:00Z",
+    "ToDate":"0001-01-01T00:00:00Z",
+    "Language":0
+}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.DomainModel.Search.SearchResult, Coxito.DomainModel",
+    "Conversations":[],
+    "FromPersons":[
+        {
+            "$type":"Coxito.DomainModel.Search.Person, Coxito.DomainModel","Email":"andys@virtualworks.com","Name":"Andy Stergiades","Id":null,"Selected":false,"Frequency":594
+        },{
+			"$type":"Coxito.DomainModel.Search.Person, Coxito.DomainModel","Email":"TeamCity@infofinder.no","Name":"TeamCity@infofinder.no","Id":null,"Selected":false,"Frequency":189
+		},{
+			"$type":"Coxito.DomainModel.Search.Person, Coxito.DomainModel","Email":"group-digests@linkedin.com","Name":"Software Product Managers Group Group Members","Id":null,"Selected":false,"Frequency":144
+		},{
+			"$type":"Coxito.DomainModel.Search.Person, Coxito.DomainModel","Email":"MSDNIC@EU.SUBSERVICES.COM","Name":"MSDNIC@EU.SUBSERVICES.COM","Id":null,"Selected":false,"Frequency":30
+		},{
+			"$type":"Coxito.DomainModel.Search.Person, Coxito.DomainModel","Email":"ronny.skoglund@jede.com","Name":"Jede Norge","Id":null,"Selected":false,"Frequency":9
+		}],
+    "Folders":[],
+    "Result":[
+        {
+            "$type":"AuxMeta.DomainModel.Document.CloudFolder, Coxito.DomainModel","Name":"Innboks","Id":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQDnFnjWBBeYT66wWDfAHjInAAABYEq9AAAA","Connector":"Exchange","CustomerId":["testcustomer"],"UserId":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":null,"IncludeTime":true},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":null,"IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQDnFnjWBBeYT66wWDfAHjInAAABYEq6AAAA","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.CloudFolder","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":null,"IncludeTime":true}
+        },
+        {
+            "$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAHej8rnasUpZrn%2bux7pfjkQ%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoAOAAAewEMGSVOcSL6HesGy/ltHAAACUrZLAAA=","Subject":"MSDN Ref:C9000851677 / Casenumber 9000851677 - Changed company \tname and address","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Stein J. Gran"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:13:12","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"MSDNIC@EU.SUBSERVICES.COM","Name":"MSDNIC@EU.SUBSERVICES.COM"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:31","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKADgAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:31","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAFTlU6sYVkUOuAYvDBdgwwI%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoASAAAewEMGSVOcSL6HesGy/ltHAAACUsHAAAA=","Subject":"RE: Software Licenses","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Stein J. Gran"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:16:59","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"andys@virtualworks.com","Name":"Andy Stergiades"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-23T09:07:29","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAEgAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-23T09:07:29","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQALU%2fduKCYkENvPkBs1KALhU%3d"},"Language":2,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoBaAAAewEMGSVOcSL6HesGy/ltHAAACVflSAAA=","Subject":"Spam: (LOW risk)Kjøp kaffeautomat fra Jede, få med en Dolce Gusto","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Firmapost"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:17:39","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"ronny.skoglund@jede.com","Name":"Jede Norge"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:17:39","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAWgAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:17:39","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAN%2fvitazpEnrvXBZc4U1D3o%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoBcAAAewEMGSVOcSL6HesGy/ltHAAACVf2eAAA=","Subject":"RE: Developers","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Stein J. Gran"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:24:24","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"andys@virtualworks.com","Name":"Andy Stergiades"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-23T09:07:40","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAXAAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-23T09:07:40","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQACE2EzUaIU2IoZdYonLX4eU%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoAnAAAewEMGSVOcSL6HesGy/ltHAAACVY/mAAA=","Subject":"easter","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Stein J. Gran"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:27:35","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"andys@virtualworks.com","Name":"Andy Stergiades"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-23T08:54:39","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAJwAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-23T08:54:39","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAFecomVa1kFcu0wX5e1Ql38%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoAPAAAewEMGSVOcSL6HesGy/ltHAAACUrt0AAA=","Subject":"[3] discussions, [1] comment and [3] jobs on LinkedIn","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Stein J. Gran"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:36:07","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"group-digests@linkedin.com","Name":"Software Product Managers Group Group Members"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:34","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKADwAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:34","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAOBdW9VRBk%2fXnmg0X60x9ww%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoAVAAAewEMGSVOcSL6HesGy/ltHAAACUuhEAAA=","Subject":"[TeamCity, PROBABLY_HANGING] Build VirtualWorks ViaWorks Daily Builds::Continuous build #4.3.10586.1710","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Stein J. Gran"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:36:29","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"TeamCity@infofinder.no","Name":"TeamCity@infofinder.no"},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:29","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAFQAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:29","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAHej8rnasUpZrn%2bux7pfjkQ%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoATAAAewEMGSVOcSL6HesGy/ltHAAACUuDEAAA=","Subject":"FW: MSDN Ref:C9000851677 / Casenumber 9000851677 - Changed company \tname and address","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Hanne Dammyr"},{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Truls Baklid"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:00","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":""},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:28","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAEwAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:28","IncludeTime":true}
+		},{
+			"$type":"AuxMeta.DomainModel.Document.EmailMessage, Coxito.DomainModel","textContent":{"$type":"System.Text.StringBuilder, mscorlib","m_MaxCapacity":2147483647,"Capacity":16,"m_StringValue":"","m_currentThread":0},"ConversationId":{"$type":"AuxMeta.DomainModel.Document.Fields.UrlEncodedField, Coxito.DomainModel","EncodedValue":"AAQkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAQAM%2fg7Nz0%2f0yplWfpF6u6%2bZ4%3d"},"Language":1,"Id":"AAMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwBGAAAAAAAAligOqg2hTYIJiiByCwL9BwAewEMGSVOcSL6HesGy/ltHAAACUoATAAAewEMGSVOcSL6HesGy/ltHAAACUuDFAAA=","Subject":"Påskeferie?","Summary":"","TextFiles":[],"Connector":"Exchange","Container":[],"CustomerId":["testcustomer"],"To":[{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Sturla Johannessen"},{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Karl P. Askim"},{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":"Lars Morten Nygaard"}],"Body":null,"UserId":[],"Cc":[],"DateCreated":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:39:40","IncludeTime":true},"From":{"$type":"AuxMeta.DomainModel.Document.Fields.EmailAddress, Coxito.DomainModel","Email":"","Name":""},"DateModified":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:41:25","IncludeTime":true},"ParentId":"AQMkADMxNmJhMmU4LTFiZTAtNGMxZS1iY2FiLTYwYTkyZWMyNGQ2YwAuAAAEligOqg2hTYIJiiByCwL9AQAewEMGSVOcSL6HesGy/ltHAAAAAlKAEwAAAA==","ParentName":null,"Version":{"$type":"AuxMeta.DomainModel.Document.Fields.VersionInformation, Coxito.DomainModel","Extractor":0,"Connector":0,"Object":0},"Md5Signature":null,"Thumbnail":"","ModelName":"AuxMeta.DomainModel.Document.EmailMessage","ObjectLinks":[],"SearchDate":{"$type":"AuxMeta.DomainModel.Document.Fields.DateTimeField, Coxito.DomainModel","DateTime":"2012-03-22T15:41:25","IncludeTime":true}}],
+	"Misspelled":false,
+	"AlternativeUserQueries":[],
+	"AlternateLanguage":false,
+	"AlternateLanguageQueries":null
+}
+
+
+--
+Subscription
+The following  subscription actions can be done with the API:
+<p>
+<ol>
+<li>
+Get price information for the features which can be subscribed to
+</li>
+<li>
+Get stored subscription details for a customer
+</li>
+<li>
+Create a subscription
+</li>
+<li>
+Cancel a subscription
+</li>
+</ol>
+--
+Get price information for the features which can be subscribed to
+<p>
+<h5>
+Properties
+</h5>
+<li>
+currency (string): The currency we want the prices in
+</li>
+<li>
+featurePrices (list of features, including price and currency): Used for paging search results. Use searchPage=0 to get the search results on the first page, searchPage=1 for the second page and so on
+</li>
+<li>
+feature (string): The name of the feature
+</li>
+<li>
+pricePerLicense (double): The price per license for this feature
+</li>
+<li>
+currency (string): The currency the feature price is in
+</li>
+<li>
+subscriptionLevel (int): There are three subscription levels, and each can have different prices and different features. The subscription levels are: 1 = Starter, 2 = Enterprise, 3 = EnterprisePlus
+</li>
+<p>
+GET /subscription/price{?currency}
+< 200
+< Content-Type: application/json
+[
+    {
+        "$type":"Coxito.DomainModel.Subscription.PriceInformation, Coxito.DomainModel",
+        "FeaturePrices":[
+            {
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"Exchange mailbox",
+                "PricePerLicense":12.0,
+                "Currency":"USD"
+            },{
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"Dropbox account",
+                "PricePerLicense":4.0,
+                "Currency":"USD"
+            },{
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"SuperOffice CRM",
+                "PricePerLicense":15.0,
+                "Currency":"USD"
+            }
+        ],
+        "SubscriptionLevel":1
+    },{
+        "$type":"Coxito.DomainModel.Subscription.PriceInformation, Coxito.DomainModel",
+        "FeaturePrices":[
+            {
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"Exchange mailbox",
+                "PricePerLicense":14.0,
+                "Currency":"USD"
+            },{
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"Dropbox account",
+                "PricePerLicense":4.0,
+                "Currency":"USD"
+            },{
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"SuperOffice CRM",
+                "PricePerLicense":17.0,
+                "Currency":"USD"
+            }
+        ],
+        "SubscriptionLevel":2
+    },{
+        "$type":"Coxito.DomainModel.Subscription.PriceInformation, Coxito.DomainModel",
+        "FeaturePrices":[
+            {
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"Exchange mailbox",
+                "PricePerLicense":17.0,
+                "Currency":"USD"
+            },{
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"Dropbox account",
+                "PricePerLicense":6.0,
+                "Currency":"USD"
+            },{
+                "$type":"Coxito.DomainModel.Subscription.FeaturePrice, Coxito.DomainModel",
+                "Feature":"SuperOffice CFM",
+                "PricePerLicense":20.0,
+                "Currency":"USD"
+            }
+            ],
+            "SubscriptionLevel":3
+    }
+]
+
+
+Get stored subscription details for a customer
+<p>
+<h5>
+Properties
+</h5>
+<li>
+customerId (string): The unique ID for the customer to retrieve subscription details for 
+</li>
+<li>
+features (list): List fo features which are enabled in this subscriptino
+</li>
+<li>
+name (string): The name of the feature
+</li>
+<li>
+customerName (string): The name of customer
+</li>
+<li>
+numberOfLicenses (int): The number of licensed users for this customer
+</li>
+<li>
+subscriptionPeriod (int): The length of the subscription billing period, i.e. how often the customer is billed. 1 = Monthly, 2 = quarterly, 3 = half year, 4 = annually. Only monthly is supported for now.
+</li>
+<p>
+GET /subscription/details{?customerId}
+< 200
+< Content-Type: application/json
+{
+    "$type":"Coxito.DomainModel.Subscription.SubscriptionDetails, Coxito.DomainModel",
+    "Features":[
+        {
+            "$type":"Coxito.DomainModel.Subscription.SubscriptionFeature, Coxito.DomainModel",
+            "Name":"Exchange mailbox"
+        },{
+            "$type":"Coxito.DomainModel.Subscription.SubscriptionFeature, Coxito.DomainModel",
+            "Name":"Dropbox account"
+        }
+    ],
+    "CustomerName":"Customer Inc",
+    "CustomerId":"b96b89e4-d246-4203-aee8-5003a3c4c672",
+    "NumberOfLicenses":17,
+    "SubscriptionPeriod":1
+}
+
+
+Create a subscription
+<p>
+<h5>
+Properties
+</h5>
+<li>
+features (list): The name of the features the customer wants to subscribe to
+</li>
+<li>
+customerName (string): The company name of the customer
+</li>
+<li>
+numberOfLicenses (int): The number of licenseds
+</li>
+<li>
+subscriptionPeriod (int): How often the customer wants to be billed. 1 = Monthly, 2 = quarterly, 3 = half year, 4 = annually. Only monthly is supported for now.
+</li>
+<li>
+paymentToken (string): Payment token generated by Paymill
+</li>
+<li>
+promoCode (string): Optional promotional code, which can give a discount
+</li>
+<p>
+POST /subscription
+> Content-Type: application/json
+{
+    "SubscriptionDetails":{
+        "Features":[
+            {
+                "Name":"Exchange mailbox"
+            },{
+                "Name":"Dropbox account"
+            }
+        ],
+        "CustomerName":"Customer Inc",
+        "CustomerId":"de7f047a-979d-4e16-97d7-5f663d7d7150",
+        "NumberOfLicenses":17,
+        "SubscriptionPeriod":1
+    },
+    "Payment":{
+        "PaymentToken":"39487572934857",
+        "PromoCode":"jhsgdfkj"
+    }
+}
+< 204
+
+
+Cancel a subscription
+<p>
+<b>
+NOTE: 
+</b>
+This deletes all indexed data and setting for this customer, and this action cannot be undone!
+<p>
+<h5>
+Properties
+</h5>
+<li>
+customerId (string): The unique identifier of the customer to end the subscription for.
+</li>
+PUT /subscription/cancel{?customerId}
+< 204
